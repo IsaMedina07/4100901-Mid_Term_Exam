@@ -41,6 +41,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
+uint8_t cont_left = 0;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -57,6 +58,9 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	UNUSED(GPIO_Pin);
+	if(GPIO_Pin == S1_Pin){
+		cont_left = 6;
+	}
 }
 
 // Configuración del hearbit a 2Hz
@@ -68,7 +72,19 @@ void heartbeat(void){
 	}
 }
 
-
+// Configuración del la estacionaria izquierda a 2Hz
+void signal_led_left(void){
+	static uint32_t left_tick = 0;
+	if(left_tick < HAL_GetTick()){
+		if(cont_left > 0){
+			left_tick =  HAL_GetTick() + 500;
+			HAL_GPIO_TogglePin(D1_GPIO_Port, D1_Pin);
+			cont_left--;
+		}else{
+		HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin, 1);
+		}
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -111,6 +127,7 @@ int main(void)
   while (1)
   {
 	  heartbeat();
+	  signal_led_left();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
