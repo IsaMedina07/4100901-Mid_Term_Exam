@@ -42,6 +42,7 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 uint8_t cont_left = 0;
+uint8_t cont_right = 0;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -60,6 +61,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	UNUSED(GPIO_Pin);
 	if(GPIO_Pin == S1_Pin){
 		cont_left = 6;
+	}else if(GPIO_Pin == S2_Pin){
+		cont_right = 6;
 	}
 }
 
@@ -82,6 +85,20 @@ void signal_led_left(void){
 			cont_left--;
 		}else{
 		HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin, 1);
+		}
+	}
+}
+
+// Configuración del la estacionaria derecha a 2Hz
+void signal_led_right(void){
+	static uint32_t right_tick = 0;
+	if(right_tick < HAL_GetTick()){
+		if(cont_right > 0){
+			right_tick =  HAL_GetTick() + 500;
+			HAL_GPIO_TogglePin(D2_GPIO_Port, D2_Pin);
+			cont_right--;
+		}else{
+		HAL_GPIO_WritePin(D2_GPIO_Port, D2_Pin, 1);
 		}
 	}
 }
@@ -128,6 +145,7 @@ int main(void)
   {
 	  heartbeat();
 	  signal_led_left();
+	  signal_led_right();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

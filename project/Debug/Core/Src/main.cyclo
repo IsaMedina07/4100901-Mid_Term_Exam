@@ -1,8 +1,9 @@
-../Core/Src/main.c:59:6:HAL_GPIO_EXTI_Callback	2
-../Core/Src/main.c:67:6:heartbeat	2
-../Core/Src/main.c:76:6:signal_led_left	3
-../Core/Src/main.c:95:5:main	1
-../Core/Src/main.c:142:6:SystemClock_Config	4
-../Core/Src/main.c:186:13:MX_USART2_UART_Init	2
-../Core/Src/main.c:221:13:MX_GPIO_Init	1
-../Core/Src/main.c:285:6:Error_Handler	1
+../Core/Src/main.c:60:6:HAL_GPIO_EXTI_Callback	3
+../Core/Src/main.c:70:6:heartbeat	2
+../Core/Src/main.c:79:6:signal_led_left	3
+../Core/Src/main.c:93:6:signal_led_right	3
+../Core/Src/main.c:112:5:main	1
+../Core/Src/main.c:160:6:SystemClock_Config	4
+../Core/Src/main.c:204:13:MX_USART2_UART_Init	2
+../Core/Src/main.c:239:13:MX_GPIO_Init	1
+../Core/Src/main.c:303:6:Error_Handler	1
