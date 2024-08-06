@@ -43,7 +43,10 @@
 UART_HandleTypeDef huart2;
 uint8_t cont_left = 0;
 uint8_t cont_right = 0;
+uint8_t cont_estationary = 0;
+uint8_t status_stationary = 0;
 uint8_t index = 0;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -60,15 +63,25 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	UNUSED(GPIO_Pin);
+	uint32_t current_time = HAL_GetTick();
+
 	if(GPIO_Pin == S1_Pin){
 		cont_left = 6;
-		index = 1;
+		index = 0;
 		HAL_UART_Transmit(&huart2, "Direccional izquierda\r\n", 23,10);
 	}else if(GPIO_Pin == S2_Pin){
 		cont_right = 6;
-		index = 2;
+		index = 1;
 		HAL_UART_Transmit(&huart2, "Direccional derecha\r\n", 21,10);
+	}else if(GPIO_Pin == S3_Pin){
+		status_stationary = 1;
+		cont_estationary = 6;
+		index = 2;
+		HAL_UART_Transmit(&huart2, "Estacionarias\r\n", 15,10);
 	}
+
+
+
 }
 
 // Configuración del hearbit a 2Hz
@@ -104,6 +117,22 @@ void signal_led_right(void){
 			cont_right--;
 		}else{
 		HAL_GPIO_WritePin(D2_GPIO_Port, D2_Pin, 1);
+		}
+	}
+}
+
+// Creación de estacionarias:
+void stationary(void){
+	static uint32_t est_tick = 0;
+	if(est_tick < HAL_GetTick()){
+		if(status_stationary == 1 && cont_estationary > 0){
+			est_tick =  HAL_GetTick() + 500;
+			HAL_GPIO_TogglePin(D1_GPIO_Port, D1_Pin);
+			HAL_GPIO_TogglePin(D2_GPIO_Port, D2_Pin);
+			cont_estationary--;
+		}else{
+			HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin, 1);
+			HAL_GPIO_WritePin(D2_GPIO_Port, D2_Pin, 1);
 		}
 	}
 }
@@ -149,10 +178,12 @@ int main(void)
   while (1)
   {
 	  heartbeat();
-	  if(index == 1){
+	  if(index == 0){
 		  signal_led_left();
-	  }else if(index == 2){
+	  }else if(index == 1){
 		  signal_led_right();
+	  }else if(index == 2){
+		  stationary();
 	  }
     /* USER CODE END WHILE */
 
