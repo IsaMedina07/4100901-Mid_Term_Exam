@@ -40,15 +40,14 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+/* USER CODE BEGIN PV */
 UART_HandleTypeDef huart2;
 uint8_t cont_left = 0;
 uint8_t cont_right = 0;
 uint8_t cont_estationary = 0;
 uint8_t status_stationary = 0;
-uint8_t index = 0;
-
-/* USER CODE BEGIN PV */
-
+uint8_t index = -1;
+uint32_t last_press_time[3] = {0}; 	// Array que almacena el tiempo de A1, A2 y A3
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,22 +64,36 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	UNUSED(GPIO_Pin);
 	uint32_t current_time = HAL_GetTick();
 
+	// Revisamos que boton pulsó, y si no se registra ninguno de los tres, no realiza ninguna acción y retorna un mensaje en el YAT: 'NULL'
 	if(GPIO_Pin == S1_Pin){
-		cont_left = 6;
 		index = 0;
-		HAL_UART_Transmit(&huart2, "Direccional izquierda\r\n", 23,10);
 	}else if(GPIO_Pin == S2_Pin){
-		cont_right = 6;
 		index = 1;
-		HAL_UART_Transmit(&huart2, "Direccional derecha\r\n", 21,10);
 	}else if(GPIO_Pin == S3_Pin){
 		status_stationary = 1;
-		cont_estationary = 6;
 		index = 2;
-		HAL_UART_Transmit(&huart2, "Estacionarias\r\n", 15,10);
+	}else{
+		HAL_UART_Transmit(&huart2, "NULL!!\r\n", 8,10);
+		return;
 	}
 
+	  // Comprobamos el tiempo de la última pulsación con cierto tiempo para evitar el rebote
+	  if(current_time - last_press_time[index] > 250){
+		  last_press_time[index] = current_time; // Actualiza el tiempo
 
+		  if(index == 0){
+			  cont_left = 6;
+			  cont_right = 0;
+			  HAL_UART_Transmit(&huart2, "Direccional izquierda\r\n", 23,10);
+		  }else if(index == 1){
+			  cont_right = 6;
+			  cont_left = 0;
+			  HAL_UART_Transmit(&huart2, "Direccional derecha\r\n", 21,10);
+		  }else{
+			  cont_estationary = 6;
+			  HAL_UART_Transmit(&huart2, "Estacionarias\r\n", 15,10);
+		  }
+	  }
 
 }
 
