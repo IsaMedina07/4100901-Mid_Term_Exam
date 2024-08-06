@@ -48,6 +48,9 @@ uint8_t cont_estationary = 0;
 uint8_t status_stationary = 0;
 uint8_t index = -1;
 uint32_t last_press_time[3] = {0}; 	// Array que almacena el tiempo de A1, A2 y A3
+uint32_t last_doble_time = 0;
+uint8_t doble_iz = 0;
+uint8_t doble_der = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,20 +81,38 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}
 
 	  // Comprobamos el tiempo de la última pulsación con cierto tiempo para evitar el rebote
-	  if(current_time - last_press_time[index] > 250){
+	  if(current_time - last_press_time[index] > 200){
 		  last_press_time[index] = current_time; // Actualiza el tiempo
 
-		  if(index == 0){
-			  cont_left = 6;
-			  cont_right = 0;
-			  HAL_UART_Transmit(&huart2, "Direccional izquierda\r\n", 23,10);
-		  }else if(index == 1){
-			  cont_right = 6;
-			  cont_left = 0;
-			  HAL_UART_Transmit(&huart2, "Direccional derecha\r\n", 21,10);
-		  }else{
-			  cont_estationary = 6;
-			  HAL_UART_Transmit(&huart2, "Estacionarias\r\n", 15,10);
+		  uint8_t doble_pulsacion_time = HAL_GetTick();
+		  // Verificamos la doble pulsación
+		  if(doble_pulsacion_time - last_doble_time <= 270){
+			  last_doble_time = doble_pulsacion_time;
+
+			  if(index == 0){
+				  doble_iz = 1;
+				  doble_der = 0;
+				  HAL_UART_Transmit(&huart2, "Izquierda INDEFINIDA\r\n", 22,10);
+			  }else if(index == 1){
+				  doble_iz = 0;
+				  doble_der = 1;
+				  HAL_UART_Transmit(&huart2, "Derecha INDEFINIDA\r\n", 20,10);
+			  }
+		  }
+		  else{
+			  if(index == 0){
+			  			  cont_left = 6;
+			  			  cont_right = 0;
+			  			  doble_iz = 0;
+			  			  HAL_UART_Transmit(&huart2, "Direccional izquierda\r\n", 23,10);
+			  		  }else if(index == 1){
+			  			  cont_right = 6;
+			  			  cont_left = 0;
+			  			  HAL_UART_Transmit(&huart2, "Direccional derecha\r\n", 21,10);
+			  		  }else{
+			  			  cont_estationary = 6;
+			  			  HAL_UART_Transmit(&huart2, "Estacionarias\r\n", 15,10);
+			  		  }
 		  }
 	  }
 
@@ -110,10 +131,11 @@ void heartbeat(void){
 void signal_led_left(void){
 	static uint32_t left_tick = 0;
 	if(left_tick < HAL_GetTick()){
-		if(cont_left > 0){
+		if(cont_left > 0 || doble_iz == 1){
 			left_tick =  HAL_GetTick() + 500;
 			HAL_GPIO_TogglePin(D1_GPIO_Port, D1_Pin);
 			cont_left--;
+			HAL_GPIO_WritePin(D2_GPIO_Port, D2_Pin, 1);
 		}else{
 		HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin, 1);
 		}
@@ -124,10 +146,11 @@ void signal_led_left(void){
 void signal_led_right(void){
 	static uint32_t right_tick = 0;
 	if(right_tick < HAL_GetTick()){
-		if(cont_right > 0){
+		if(cont_right > 0 || doble_der == 1){
 			right_tick =  HAL_GetTick() + 500;
 			HAL_GPIO_TogglePin(D2_GPIO_Port, D2_Pin);
 			cont_right--;
+			HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin, 1);
 		}else{
 		HAL_GPIO_WritePin(D2_GPIO_Port, D2_Pin, 1);
 		}
