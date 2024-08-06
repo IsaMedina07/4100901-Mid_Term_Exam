@@ -43,6 +43,7 @@
 UART_HandleTypeDef huart2;
 uint8_t cont_left = 0;
 uint8_t cont_right = 0;
+uint8_t index = 0;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -61,8 +62,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	UNUSED(GPIO_Pin);
 	if(GPIO_Pin == S1_Pin){
 		cont_left = 6;
+		index = 1;
+		HAL_UART_Transmit(&huart2, "Direccional izquierda\r\n", 23,10);
 	}else if(GPIO_Pin == S2_Pin){
 		cont_right = 6;
+		index = 2;
+		HAL_UART_Transmit(&huart2, "Direccional derecha\r\n", 21,10);
 	}
 }
 
@@ -144,8 +149,11 @@ int main(void)
   while (1)
   {
 	  heartbeat();
-	  signal_led_left();
-	  signal_led_right();
+	  if(index == 1){
+		  signal_led_left();
+	  }else if(index == 2){
+		  signal_led_right();
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
